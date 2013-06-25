@@ -17,9 +17,28 @@
 
 				// See if which sources match
 				for( var j = 0, jl = sources.length; j < jl; j++ ){
+					var specified;
 					var media = sources[ j ].getAttribute( "data-media" );
-					// if there's no media specified, OR w.matchMedia is supported 
-					if( !media || ( w.matchMedia && w.matchMedia( media ).matches ) ){
+					specified = specified || media;
+					// if w.matchMedia is supported
+					if( w.matchMedia && w.matchMedia( media ).matches ){
+						matches.push( sources[ j ] );
+					}
+					else {
+						for ( var key in w.picturefill.plugins ) {
+							if (! w.picturefill.plugins.hasOwnProperty(key)) continue;
+							var result = w.picturefill.plugins[key]({
+								source: sources[ j ],
+								picture: ps[ i ]
+							});
+							specified = specified || result.specified;
+							if (result.matches) {
+								matches.push(sources[ j ]);
+								break;
+							}
+						}
+					}
+					if (!specified) {
 						matches.push( sources[ j ] );
 					}
 				}
@@ -43,6 +62,8 @@
 		}
 		}
 	};
+
+	w.picturefill.plugins = w.picturefill.plugins || {};
 
 	// Run on resize and domready (w.load as a fallback)
 	if( w.addEventListener ){
